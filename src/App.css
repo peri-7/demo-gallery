@@ -202,6 +202,66 @@ button.link {
   cursor: pointer;
 }
 
+/* --- request log (a learning aid, not a feature) --- */
+
+.reqlog h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.reqlog ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+}
+
+.req {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.req code {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.75;
+}
+
+.req-n {
+  opacity: 0.4;
+  width: 2rem;
+}
+
+.req-kind {
+  width: 5rem;
+  opacity: 0.6;
+}
+
+.req-state {
+  font-weight: 600;
+}
+
+.req-ok .req-state {
+  color: #15803d;
+}
+
+.req-canceled {
+  opacity: 0.5;
+}
+
+.req-canceled .req-state {
+  text-decoration: line-through;
+}
+
+.req-failed .req-state {
+  color: #b91c1c;
+}
+
 /* --- pager --- */
 
 .pager {

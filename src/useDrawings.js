@@ -84,6 +84,30 @@ export function useDrawings(apiUrl, query) {
   const [reloadCount, setReloadCount] = useState(0);
   const reload = useCallback(() => setReloadCount((n) => n + 1), []);
 
+  // --- a visible record of every request this page has made ---------------
+  //
+  // Purely for learning. Debouncing and aborting are invisible by design: when
+  // they work, nothing happens, and "nothing happened" is hard to observe. This
+  // log puts the requests on the screen so the mechanisms can be watched
+  // without opening DevTools.
+  //
+  // A real app would not ship this.
+  const [log, setLog] = useState([]);
+  const seq = useRef(0);
+
+  const start = useCallback((url, kind) => {
+    const n = (seq.current += 1);
+    // The query string only — the origin is the same every time and would just
+    // make each line unreadable.
+    const shown = url.slice(url.indexOf("?") + 1).replace(/&?cursor=[^&]*/, "&cursor=…");
+    setLog((prev) => [{ n, kind, shown, state: "sent" }, ...prev].slice(0, 8));
+    return n;
+  }, []);
+
+  const finish = useCallback((n, state) => {
+    setLog((prev) => prev.map((e) => (e.n === n ? { ...e, state } : e)));
+  }, []);
+
   // Refs hold values that survive re-renders without causing one. The
   // controller is not display state — changing it should never repaint
   // anything — so a ref is the right home for it, not useState.
@@ -100,10 +124,14 @@ export function useDrawings(apiUrl, query) {
 
     setState((prev) => ({ ...prev, status: "loading", error: null }));
 
-    fetch(drawingsUrl(apiUrl, query, null), { signal: controller.signal })
+    const url = drawingsUrl(apiUrl, query, null);
+    const n = start(url, "page 1");
+
+    fetch(url, { signal: controller.signal })
       .then(async (res) => {
         const body = await readBody(res);
         if (!res.ok) throw new Error(describe(res, body));
+        finish(n, "ok");
         setState({
           status: "ok",
           drawings: body.drawings,
@@ -113,7 +141,8 @@ export function useDrawings(apiUrl, query) {
       })
       .catch((err) => {
         // An abort is a cancellation we caused, not a failure to report.
-        if (err.name === "AbortError") return;
+        if (err.name === "AbortError") return finish(n, "canceled");
+        finish(n, "failed");
         setState({ status: "error", drawings: [], nextCursor: null, error: err.message });
       });
 
@@ -131,10 +160,14 @@ export function useDrawings(apiUrl, query) {
       // never be appended to a list of the new one.
       const signal = abortRef.current?.signal;
 
-      fetch(drawingsUrl(apiUrl, query, cursor), { signal })
+      const url = drawingsUrl(apiUrl, query, cursor);
+      const n = start(url, "next page");
+
+      fetch(url, { signal })
         .then(async (res) => {
           const body = await readBody(res);
           if (!res.ok) throw new Error(describe(res, body));
+          finish(n, "ok");
           // Functional update: append to whatever the list IS now, not to
           // whatever it was when this request started. `[...state.drawings]`
           // captured above would silently drop any page that landed in between.
@@ -146,7 +179,8 @@ export function useDrawings(apiUrl, query) {
           }));
         })
         .catch((err) => {
-          if (err.name === "AbortError") return;
+          if (err.name === "AbortError") return finish(n, "canceled");
+          finish(n, "failed");
           setState((prev) => ({ ...prev, status: "error", error: err.message }));
         });
     },
@@ -154,7 +188,7 @@ export function useDrawings(apiUrl, query) {
     [apiUrl, sort, order, artist, minRating, hasImage]
   );
 
-  return { ...state, loadMore, reload };
+  return { ...state, loadMore, reload, log };
 }
 
 // An error can come from somewhere that has never heard of our API — a proxy, a

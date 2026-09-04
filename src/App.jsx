@@ -30,7 +30,10 @@ export default function App() {
   const debouncedArtist = useDebounced(controls.artist, 300);
   const query = { ...controls, artist: debouncedArtist };
 
-  const { status, drawings, nextCursor, error, loadMore, reload } = useDrawings(API_URL, query);
+  const { status, drawings, nextCursor, error, loadMore, reload, log } = useDrawings(
+    API_URL,
+    query
+  );
 
   // Changing any control resets the list to page 1 — the hook does this for
   // free, because a changed query is a changed effect dependency. There is no
@@ -110,6 +113,28 @@ export default function App() {
         <button type="button" className="link" onClick={() => setControls(BLANK_QUERY)}>
           Reset
         </button>
+      </section>
+
+      {/* Learning aid, not a feature. Debouncing and aborting are invisible
+          when they work — this is the only way to watch them without DevTools.
+          Note that on a fresh load you will see TWO page-1 requests, one of
+          them canceled: that is React's StrictMode deliberately mounting every
+          effect twice in development, to expose effects that don't clean up
+          after themselves. Ours does, so one of the two is cancelled cleanly.
+          It does not happen in a production build. */}
+      <section className="card reqlog">
+        <h2>Requests to the API</h2>
+        <ol>
+          {log.map((e) => (
+            <li key={e.n} className={`req req-${e.state}`}>
+              <span className="req-n">#{e.n}</span>
+              <span className="req-kind">{e.kind}</span>
+              <code>{e.shown}</code>
+              <span className="req-state">{e.state}</span>
+            </li>
+          ))}
+        </ol>
+        {log.length === 0 && <p className="muted">Nothing yet.</p>}
       </section>
 
       {status === "error" && (
