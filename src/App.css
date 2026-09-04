@@ -150,6 +150,86 @@ th {
   text-decoration: line-through;
 }
 
+/* --- browse controls --- */
+
+.controls h2 {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+}
+
+.controls .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem;
+}
+
+.controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.75;
+}
+
+.controls select,
+.controls input {
+  font: inherit;
+  text-transform: none;
+  letter-spacing: normal;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-radius: 0.25rem;
+  background: transparent;
+  color: inherit;
+}
+
+.controls p {
+  margin: 0.75rem 0 0;
+}
+
+button.link {
+  margin-top: 0.75rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 0.85rem;
+  opacity: 0.7;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* --- pager --- */
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.pager button {
+  font: inherit;
+  padding: 0.5rem 1.25rem;
+  border: 1px solid currentColor;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.pager button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pager .count {
+  margin-left: auto;
+}
+
 /* --- thumbnails --- */
 
 .thumb-col {
