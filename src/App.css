@@ -150,6 +150,146 @@ th {
   text-decoration: line-through;
 }
 
+/* --- browse controls --- */
+
+.controls h2 {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+}
+
+.controls .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem;
+}
+
+.controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.75;
+}
+
+.controls select,
+.controls input {
+  font: inherit;
+  text-transform: none;
+  letter-spacing: normal;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-radius: 0.25rem;
+  background: transparent;
+  color: inherit;
+}
+
+.controls p {
+  margin: 0.75rem 0 0;
+}
+
+button.link {
+  margin-top: 0.75rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 0.85rem;
+  opacity: 0.7;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* --- request log (a learning aid, not a feature) --- */
+
+.reqlog h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.reqlog ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+}
+
+.req {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.req code {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.75;
+}
+
+.req-n {
+  opacity: 0.4;
+  width: 2rem;
+}
+
+.req-kind {
+  width: 5rem;
+  opacity: 0.6;
+}
+
+.req-state {
+  font-weight: 600;
+}
+
+.req-ok .req-state {
+  color: #15803d;
+}
+
+.req-canceled {
+  opacity: 0.5;
+}
+
+.req-canceled .req-state {
+  text-decoration: line-through;
+}
+
+.req-failed .req-state {
+  color: #b91c1c;
+}
+
+/* --- pager --- */
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.pager button {
+  font: inherit;
+  padding: 0.5rem 1.25rem;
+  border: 1px solid currentColor;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.pager button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pager .count {
+  margin-left: auto;
+}
+
 /* --- thumbnails --- */
 
 .thumb-col {
