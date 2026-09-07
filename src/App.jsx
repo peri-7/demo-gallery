@@ -1,6 +1,8 @@
 import { useState } from "react";
 import "./App.css";
 import UploadForm from "./UploadForm.jsx";
+import AuthPanel from "./AuthPanel.jsx";
+import { AuthProvider, useAuth } from "./auth.jsx";
 import { useDebounced, useDrawings } from "./useDrawings.js";
 
 // Read at build time, not at run time. Vite replaces this expression with a
@@ -19,7 +21,23 @@ const SORT_OPTIONS = [
 
 const BLANK_QUERY = { sort: "year", order: "desc", artist: "", minRating: "", hasImage: "" };
 
+// A component CANNOT consume a context it renders itself — by the time
+// <AuthProvider> exists in the tree, App has already run, so a useAuth() call up
+// here would find nothing. Hence the split: App only provides, Gallery consumes.
+// This is a rule about React's tree, not a style preference, and it is why
+// providers so often end up in main.jsx. Kept here instead so the API_URL
+// constant stays in one file.
 export default function App() {
+  return (
+    <AuthProvider apiUrl={API_URL}>
+      <Gallery />
+    </AuthProvider>
+  );
+}
+
+function Gallery() {
+  const { isLoggedIn } = useAuth();
+
   // What the controls currently show. Updates on every keystroke.
   const [controls, setControls] = useState(BLANK_QUERY);
 
@@ -46,9 +64,22 @@ export default function App() {
   return (
     <main>
       <h1>Drawing Gallery</h1>
-      <p className="muted">Stage 3 — sorting, filtering, keyset pagination</p>
+      <p className="muted">Stage 4b — the session in an HttpOnly cookie</p>
 
-      <UploadForm apiUrl={API_URL} onCreated={reload} />
+      <AuthPanel />
+
+      {/* Hiding the upload form is a COURTESY, NOT A CONTROL. Anyone can open
+          DevTools and call POST /api/drawings directly; the thing that actually
+          stops them is requireAuth on the server, added in Stage 4a. This
+          conditional exists so a signed-out visitor is not offered a button that
+          can only fail — which is a UX decision, and it is worth being clear
+          with yourself about which of the two you are making. Every hidden
+          button in every admin panel is one of these. */}
+      {isLoggedIn ? (
+        <UploadForm onCreated={reload} />
+      ) : (
+        <p className="muted">Sign in to add a drawing. Browsing stays open to everyone.</p>
+      )}
 
       <section className="card controls">
         <h2>Browse</h2>
