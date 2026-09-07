@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "./auth.jsx";
 
 // Mirrors the API's allowlist. This copy exists for the file picker and for
 // fast feedback — it is NOT the enforcement. The API decides what it will sign,
@@ -12,7 +13,9 @@ const MAX_BYTES = 10 * 1024 * 1024;
 
 const BLANK = { title: "", artist: "", year: String(new Date().getFullYear()), rating: "" };
 
-export default function UploadForm({ apiUrl, onCreated }) {
+// The apiUrl prop is gone: authFetch takes paths and knows the base itself.
+export default function UploadForm({ onCreated }) {
+  const { authFetch } = useAuth();
   const [fields, setFields] = useState(BLANK);
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -58,8 +61,14 @@ export default function UploadForm({ apiUrl, onCreated }) {
       // --- 1. Ask the API for permission --------------------------------
       // It validates, chooses the key, and signs. It does not contact storage
       // and does not write to the database: nothing has happened yet.
+      //
+      // authFetch, so this carries our session. Stage 4a put requireAuth here
+      // as well as on the insert, because THIS is where the capability is
+      // granted — a signed URL is authority to write bytes into the bucket, and
+      // an unguarded endpoint handing them out lets a stranger fill the bucket
+      // without ever creating a row.
       setPhase("signing");
-      const signRes = await fetch(`${apiUrl}/api/drawings/upload-url`, {
+      const signRes = await authFetch("/api/drawings/upload-url", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contentType: file.type }),
@@ -75,6 +84,21 @@ export default function UploadForm({ apiUrl, onCreated }) {
       // Note the body: the File object itself. It is streamed from disk, not
       // read into a string. `fetch` cannot report upload progress; a progress
       // bar needs XMLHttpRequest, which still exists precisely for this.
+      //
+      // PLAIN fetch HERE, NOT authFetch — AND THIS IS THE POINT.
+      //
+      // Supabase is a third party. Attaching our session token to a request
+      // aimed at it would hand a credential that grants full access to this
+      // user's account to a host that has no business seeing it, where it would
+      // land in access logs we do not control. It buys nothing either: the
+      // signed URL already carries its own authorization, in the query string,
+      // scoped to one key and one short lifetime.
+      //
+      //     NEVER SEND A CREDENTIAL TO A HOST THAT DID NOT ISSUE IT.
+      //
+      // This is exactly the edit that looks harmless in review — "make it
+      // consistent, use the wrapper everywhere" — which is why authFetch refuses
+      // absolute URLs rather than trusting anyone to remember.
       setPhase("uploading");
       const putRes = await fetch(uploadUrl, {
         method: "PUT",
@@ -90,7 +114,7 @@ export default function UploadForm({ apiUrl, onCreated }) {
       // invisible and cheap. The other order would risk a row pointing at
       // nothing, which the user would see as a broken image.
       setPhase("saving");
-      const createRes = await fetch(`${apiUrl}/api/drawings`, {
+      const createRes = await authFetch("/api/drawings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
